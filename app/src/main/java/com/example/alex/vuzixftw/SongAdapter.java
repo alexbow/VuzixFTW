@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.widget.BaseAdapter;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Log;
 import com.example.alex.vuzixftw.R;
 
 /**

@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.content.ContentResolver;
@@ -20,6 +21,8 @@ import android.net.Uri;
 //Change away from example
 import com.example.alex.vuzixftw.MusicService.MusicBinder;
 
+
+//Note: to add song, android evice manager, file system, mnt/Sdcard/Music, press the push button (top right)
 public class MainActivity extends AppCompatActivity {
     private MusicService musicSrv;
     private Intent playIntent;
@@ -74,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
-            //add songs to list
+            //add songs to listg
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
@@ -95,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void songPicked(View view) {
-        musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
+        int viewTag = (Integer)view.getTag();
+        musicSrv.setSong(viewTag);
         musicSrv.playSong();
     }
 
