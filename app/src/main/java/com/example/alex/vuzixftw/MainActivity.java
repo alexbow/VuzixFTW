@@ -16,8 +16,12 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.net.Uri;
 import android.widget.MediaController.MediaPlayerControl;
+import android.widget.TextView;
 
 //Change away from example
 import com.example.alex.vuzixftw.MusicService.MusicBinder;
@@ -31,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     private ListView songView;
     private MusicController controller;
     private boolean paused=false, playbackPaused=false;
+    private TextView lyricsView;
 
 
     @Override
@@ -111,6 +116,18 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
             playbackPaused=false;
         }
         controller.show(0);
+        display_lyrics();
+    }
+
+    public void display_lyrics() {
+        setContentView(R.layout.lyrics_display);
+        LyricsDisplay lyrics_display = new LyricsDisplay();
+        String next_lyrics = lyrics_display.getLyrics();
+        String next_next_lyrics = lyrics_display.getLyrics2();
+
+        lyricsView = (TextView) findViewById(R.id.lyrics);
+        lyricsView.setText(next_lyrics);
+        lyricsView.setText(next_next_lyrics);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -136,6 +153,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     @Override
     public void start() {
         musicSrv.go();
+
     }
 
     @Override
