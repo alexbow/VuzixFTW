@@ -13,6 +13,11 @@ import android.database.Cursor;
 import android.widget.ListView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -273,5 +278,65 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
             playbackPaused=false;
         }
         controller.show(0);
+    }
+
+    public static String parseLyric(String song, int current){
+        String lyrics = "";
+        song += ".txt";
+        try {
+            // FileReader reads text files in the default encoding.
+            FileReader fileReader =
+                    new FileReader(song);
+
+            // Always wrap FileReader in BufferedReader.
+            BufferedReader bufferedReader =
+                    new BufferedReader(fileReader);
+
+            while((lyrics = bufferedReader.readLine()) != null) {
+
+                String[] l = lyrics.split("-");
+                String[] starttime = l[0].split(":");
+                System.out.println(starttime[0] + ":" + starttime[1]);
+                String[] endtime = l[1].split(":");
+                System.out.println(endtime[0] + ":" + endtime[1]);
+                int start = ((Integer.parseInt(starttime[0]) * 60) + (Integer.parseInt(starttime[1])) * 1000);
+                int end = ((Integer.parseInt(endtime[0]) * 60) + (Integer.parseInt(endtime[1])) * 1000);
+                System.out.println(start);
+                System.out.println(end);
+
+
+                int totmin = Integer.parseInt(endtime[0]) - Integer.parseInt(starttime[0]);
+                int totsecs = (totmin * 60) + (Integer.parseInt(endtime[1]) - Integer.parseInt(starttime[1]));
+
+                final String x = l[2];
+
+                if(current >= start && current < end){
+                    return x;
+                }
+                try {
+
+                    Thread.sleep(totsecs * 1000);
+                } catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            // Always close files.
+            bufferedReader.close();
+        }
+        catch(FileNotFoundException ex) {
+            System.out.println(
+                    "Unable to open file '" +
+                            song + "'");
+        }
+        catch(IOException ex) {
+            System.out.println(
+                    "Error reading file '"
+                            + song + "'");
+            // Or we could just do this:
+            // ex.printStackTrace();
+        }
+
+        return lyrics;
     }
 }
