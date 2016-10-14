@@ -45,6 +45,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 	}
 
 	public void onCreate() {
+        System.out.println("onCreate");
 		super.onCreate();
 		songPosn = 0;
 		player = new MediaPlayer();
@@ -72,6 +73,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Notification not = builder.build();
 
         startForeground(NOTIFY_ID, not);
+        System.out.println("onPrepared");
 	}
 
 	public void setSong(int songIndex) {
@@ -86,6 +88,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 		player.setOnPreparedListener(this);
 		player.setOnCompletionListener(this);
 		player.setOnErrorListener(this);
+        System.out.println("initMusicPlayer");
 	}
 
 	public void setList(ArrayList<Song> theSongs) {
@@ -93,6 +96,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 	}
 
 	public void playSong() {
+        System.out.println("playSong");
 		player.reset();
 		Song playSong = songs.get(songPosn);
         songTitle = playSong.getTitle();
@@ -107,7 +111,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 			Log.e("Music Service", "Error Setting data source", e);
 		}
 
-		player.prepareAsync();
+        try {
+            player.prepare();
+        }
+        catch(Exception e){
+            Log.e("Music Service", "Error Setting data source", e);
+        }
+
+        go();
 	}
 
     @Override
@@ -130,6 +141,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void onCompletion(MediaPlayer mp){
+        System.out.println("onCompletion");
         if(player.getCurrentPosition()>0){
             mp.reset();
             playNext();
@@ -149,18 +161,22 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void pausePlayer(){
+        System.out.println("pausePlayer");
         player.pause();
     }
 
     public void seek(int posn){
+        System.out.println("seek");
         player.seekTo(posn);
     }
 
     public void go(){
+        System.out.println("go");
         player.start();
     }
 
     public void playPrev(){
+        System.out.println("playPrev");
         songPosn--;
         if(songPosn<0) songPosn=songs.size()-1;
         playSong();
@@ -168,6 +184,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     //skip to next
     public void playNext(){
+        System.out.println("playNext");
         if(shuffle){
             int newSong = songPosn;
             while(newSong==songPosn){
@@ -188,6 +205,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void setShuffle(){
+        System.out.println("setShuffle");
         if(shuffle) shuffle = false;
         else shuffle = true;
     }

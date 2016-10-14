@@ -187,12 +187,12 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     @Override
     public boolean canSeekBackward() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean canSeekForward() {
-        return true;
+        return false;
     }
 
     @Override
