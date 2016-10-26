@@ -1,60 +1,58 @@
 package com.example.alex.vuzixftw;
 
-import android.os.IBinder;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.util.Log;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
-import android.content.ContentResolver;
-import android.database.Cursor;
 import android.widget.ListView;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-
-import android.net.Uri;
 import android.widget.MediaController.MediaPlayerControl;
 import android.widget.TextView;
 
-//Change away from example
 import com.example.alex.vuzixftw.MusicService.MusicBinder;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
+
+//import android.R;
+
+//Change away from example
 
 //Note: to add song, android evice manager, file system, mnt/Sdcard/Music, press the push button (top right)
 public class MainActivity extends AppCompatActivity implements MediaPlayerControl {
     private MusicService musicSrv;
     private Intent playIntent;
     private boolean musicBound = false;
+    private Cursor musicCursor;
     private ArrayList<Song> songList;
     private ListView songView;
     private MusicController controller;
-    private boolean paused=false, playbackPaused=false;
-    private TextView lyricsView;
-
+    private boolean paused = false, playbackPaused = false;
+    public TextView lyricsView;
+    private int currentTime;
+    public String nextLyrics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        songView = (ListView)findViewById(R.id.song_list);
+        songView = (ListView) findViewById(R.id.song_list);
         songList = new ArrayList<Song>();
 
         getSongList();
 
-        Collections.sort(songList, new Comparator<Song>(){
-            public int compare(Song a, Song b){
+        Collections.sort(songList, new Comparator<Song>() {
+            public int compare(Song a, Song b) {
                 return a.getTitle().compareTo(b.getTitle());
             }
         });
@@ -82,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         //retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+        musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
@@ -113,26 +111,103 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     public void songPicked(View view) {
-        int viewTag = (Integer)view.getTag();
+        int viewTag = (Integer) view.getTag();
         musicSrv.setSong(viewTag);
         musicSrv.playSong();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
         display_lyrics();
     }
 
     public void display_lyrics() {
+        currentTime = 0;
         setContentView(R.layout.lyrics_display);
-        LyricsDisplay lyrics_display = new LyricsDisplay();
-        String next_lyrics = lyrics_display.getLyrics();
-        String next_next_lyrics = lyrics_display.getLyrics2();
+        lyricsView = (TextView) findViewById(R.id.lyricsTextView);
 
-        lyricsView = (TextView) findViewById(R.id.lyrics);
-        lyricsView.setText(next_lyrics);
-        lyricsView.setText(next_next_lyrics);
+        LyricsDisplay lyrics_display = new LyricsDisplay();
+        lyricsView = (TextView) findViewById(R.id.lyricsTextView);
+
+        String testFile = "George Michael - Careless Whisper (Lyrics)";
+        nextLyrics = lyrics_display.parseLyric(testFile, currentTime);
+
+        while (nextLyrics != "END_LYRICS") {
+            System.out.println("in while");
+            currentTime += 500; //TODO: Replace with current time.
+            nextLyrics = lyrics_display.parseLyric(testFile, currentTime);
+
+            final String finalNextLyrics = nextLyrics;
+            Thread t = new Thread() { //TODO: Not going into here!!!
+                public void run() {
+                    System.out.println(finalNextLyrics);
+                    testView(finalNextLyrics);
+                    try {
+                        TimeUnit.SECONDS.sleep(2);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            t.start();
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /*
+        int i = 0;
+        while (i == 0) {
+            currentTime += 500; //TODO: Replace with current time.
+            testView(next_lyrics);
+            next_lyrics = lyrics_display.parseLyric(testFile, currentTime);
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            i++;
+            System.out.println("in while");
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("after while");
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        */
+
+
+        /*
+        String next_lyrics = "";
+        while (next_lyrics != "END_LYRICS") {
+            currentTime += 500; //TODO: Replace with current time.
+            next_lyrics = lyrics_display.parseLyric(testFile, currentTime);
+            testView(next_lyrics);
+            lyricsView.setText(next_lyrics);
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        */
+    }
+
+    public void testView(String newText){
+//        System.out.println(newText);
+        lyricsView.setText(newText);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -151,7 +226,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     protected void onDestroy() {
         stopService(playIntent);
+        unbindService(musicConnection);
         musicSrv = null;
+        musicCursor.close();
         super.onDestroy();
     }
 
@@ -163,20 +240,20 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     @Override
     public void pause() {
-        playbackPaused=true;
+        playbackPaused = true;
         musicSrv.pausePlayer();
     }
 
     @Override
     public int getDuration() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if (musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getDur();
         else return 0;
     }
 
     @Override
     public int getCurrentPosition() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if (musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getPosn();
         else return 0;
     }
@@ -188,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     @Override
     public boolean isPlaying() {
-        if(musicSrv!=null && musicBound)
+        if (musicSrv != null && musicBound)
             return musicSrv.isPng();
         return false;
     }
@@ -219,17 +296,17 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         super.onPause();
-        paused=true;
+        paused = true;
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if(paused){
+        if (paused) {
             setController();
-            paused=false;
+            paused = false;
         }
     }
 
@@ -239,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         super.onStop();
     }
 
-    private void setController(){
+    private void setController() {
         //set the controller up
         controller = new MusicController(this);
 
@@ -261,82 +338,22 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     //play next
-    private void playNext(){
+    private void playNext() {
         musicSrv.playNext();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
 
     //play previous
-    private void playPrev(){
+    private void playPrev() {
         musicSrv.playPrev();
-        if(playbackPaused){
+        if (playbackPaused) {
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
-    }
-
-    public static String parseLyric(String song, int current){
-        String lyrics = "";
-        song += ".txt";
-        try {
-            // FileReader reads text files in the default encoding.
-            FileReader fileReader =
-                    new FileReader(song);
-
-            // Always wrap FileReader in BufferedReader.
-            BufferedReader bufferedReader =
-                    new BufferedReader(fileReader);
-
-            while((lyrics = bufferedReader.readLine()) != null) {
-
-                String[] l = lyrics.split("-");
-                String[] starttime = l[0].split(":");
-                System.out.println(starttime[0] + ":" + starttime[1]);
-                String[] endtime = l[1].split(":");
-                System.out.println(endtime[0] + ":" + endtime[1]);
-                int start = ((Integer.parseInt(starttime[0]) * 60) + (Integer.parseInt(starttime[1])) * 1000);
-                int end = ((Integer.parseInt(endtime[0]) * 60) + (Integer.parseInt(endtime[1])) * 1000);
-                System.out.println(start);
-                System.out.println(end);
-
-
-                int totmin = Integer.parseInt(endtime[0]) - Integer.parseInt(starttime[0]);
-                int totsecs = (totmin * 60) + (Integer.parseInt(endtime[1]) - Integer.parseInt(starttime[1]));
-
-                final String x = l[2];
-
-                if(current >= start && current < end){
-                    return x;
-                }
-                try {
-
-                    Thread.sleep(totsecs * 1000);
-                } catch(InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            // Always close files.
-            bufferedReader.close();
-        }
-        catch(FileNotFoundException ex) {
-            System.out.println(
-                    "Unable to open file '" +
-                            song + "'");
-        }
-        catch(IOException ex) {
-            System.out.println(
-                    "Error reading file '"
-                            + song + "'");
-            // Or we could just do this:
-            // ex.printStackTrace();
-        }
-
-        return lyrics;
     }
 }
